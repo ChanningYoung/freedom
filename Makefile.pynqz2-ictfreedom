@@ -1,0 +1,26 @@
+# See LICENSE for license details.
+base_dir := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+BUILD_DIR := $(base_dir)/builds/pynqz2-ictfreedom
+FPGA_DIR := $(base_dir)/fpga-shells/xilinx
+PROJECT := ictfreedom.system
+MODEL := PYNQTop
+export CONFIG_PROJECT := ictfreedom.system
+export CONFIG := PYNQFPGAConfig
+export BOARD := pynq
+export BOOTROM_DIR := $(base_dir)/bootrom/pynq
+
+rocketchip_dir := $(base_dir)/rocket-chip
+sifiveblocks_dir := $(base_dir)/sifive-blocks
+VSRCS := \
+	$(BUILD_DIR)/$(CONFIG_PROJECT).$(CONFIG).v
+
+romimg := $(BOOTROM_DIR)/bootrom.img
+$(romimg): $(BUILD_DIR)/$(CONFIG_PROJECT).$(CONFIG).dts
+	make -C $(BOOTROM_DIR)
+
+include common.mk
+
+$(BUILD_DIR)/$(CONFIG_PROJECT).$(CONFIG).dts: $(shell find $(base_dir)/src/main/scala -name '*.scala') $(FIRRTL_JAR)
+	touch $(romimg)
+	mkdir -p $(dir $@)
+	$(SBT) "runMain freechips.rocketchip.system.Generator $(BUILD_DIR) $(PROJECT) $(MODEL) $(CONFIG_PROJECT) $(CONFIG)"
