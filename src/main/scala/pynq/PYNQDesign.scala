@@ -27,7 +27,7 @@ class PYNQTop (implicit p: Parameters) extends LazyModule{
 
     lazy val module = new LazyModuleImp(this) {
       val io = IO(new Bundle{
-          val ps_axi_slave = Flipped(adapter.module.axi)
+          val ps_axi_slave = Flipped(adapter.module.axi.cloneType)
           val front_axi = Flipped(target.module.l2_frontend_bus_axi4.head.cloneType)
           val mac_int = Input(Bool())
           val sdio_int = Input(Bool())
