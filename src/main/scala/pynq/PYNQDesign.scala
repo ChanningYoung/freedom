@@ -28,7 +28,7 @@ class PYNQTop (implicit p: Parameters) extends LazyModule{
     lazy val module = new LazyModuleImp(this) {
       val io = IO(new Bundle{
           val ps_axi_slave = Flipped(adapter.module.axi.cloneType)
-          val front_axi = Flipped(target.module.l2_frontend_bus_axi4.head.cloneType)
+          val front_axi = Flipped(target.l2_frontend_bus_axi4.head.cloneType)
           val mac_int = Input(Bool())
           val sdio_int = Input(Bool())
           val uart_int = Input(Bool())
@@ -41,10 +41,10 @@ class PYNQTop (implicit p: Parameters) extends LazyModule{
       val mmio_axi = target.module.zynqmmio_axi4.map(x => IO(x.head.cloneType)) 
 
       adapter.module.io.pc := target.module.hcpftest
-      if (target.module.debug.systemjtag.isEmpty) {
+      if (target.module.debug.get.systemjtag.isEmpty) {
         Debug.tieoffDebug(target.module.debug)
       }
-      target.module.debug.systemjtag.foreach { djtag =>
+      target.module.debug.get.systemjtag.foreach { djtag =>
         djtag.jtag <> io.jtag
         djtag.mfr_id := p(JtagDTMKey).idcodeManufId.U(11.W)
         djtag.reset := adapter.module.io.sys_reset
@@ -55,17 +55,18 @@ class PYNQTop (implicit p: Parameters) extends LazyModule{
       target.module.usb_int := io.usb_int
       (mem_axi zip target.module.zynqmem_axi4) foreach { case (io, axi) => io <> axi.head }
       (mmio_axi zip target.module.zynqmmio_axi4) foreach { case (io, axi) => io <> axi.head }
-      target.module.l2_frontend_bus_axi4.foreach { frontio =>
+      target.l2_frontend_bus_axi4.foreach { frontio =>
         frontio <> io.front_axi
       }
       adapter.module.axi <> io.ps_axi_slave
-      target.module.reset := adapter.module.io.sys_reset | target.module.debug.ndreset
+      target.module.reset := adapter.module.io.sys_reset | target.module.debug.get.ndreset
       io.gpio <> target.module.gpio
     }
 }
 
 /** Example Top with periphery devices and ports, and a Rocket subsystem */
 class PYNQDesign(implicit p: Parameters) extends RocketSubsystem
+    with HasHierarchicalBusTopology
     with HasPeripheryHCPF
     with HasAsyncExtInterrupts
 	with HasMAC
@@ -92,8 +93,6 @@ class PYNQDesignModuleImp[+L <: PYNQDesign](_outer: L) extends RocketSubsystemMo
     with HasSDIOPortModuleImp
     with HasGPIOPortModuleImp
     with HasExtInterruptsModuleImp
-    with CanHaveMasterAXI4MemPortModuleImp
-    with CanHaveSlaveAXI4PortModuleImp
     with CanHaveZynqMasterAXI4MemPortModuleImp
     with CanHaveZynqMasterAXI4MMIOPortModuleImp
     with HasPeripheryBootROMModuleImp

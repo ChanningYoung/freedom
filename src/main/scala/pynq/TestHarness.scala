@@ -10,6 +10,7 @@ import freechips.rocketchip.config.Parameters
 import freechips.rocketchip.devices.debug.Debug
 import freechips.rocketchip.diplomacy.LazyModule
 import freechips.rocketchip.subsystem.ExtIn
+import freechips.rocketchip.system.SimAXIMem
 import ictfreedom.device._
 import ictfreedom.device._
 
@@ -17,7 +18,8 @@ class TestHarness()(implicit p: Parameters) extends Module {
   val address = p(ZynqAdapterBase)
   val config = p(ExtIn)
 
-  val dut = Module(LazyModule(new PYNQDesign).module)
+  val ldut = LazyModule(new PYNQDesign)
+  val dut = Module(ldut.module)
   val adapter = Module(LazyModule(new ZynqAdapter(address, config.get)).module)
 
   val io = new Bundle {
@@ -36,9 +38,9 @@ class TestHarness()(implicit p: Parameters) extends Module {
     dut.mac_int := io.mac_int
 
     dut.dontTouchPorts()
-    dut.connectSimAXIMem()
+    SimAXIMem.connectMem(ldut)
     Debug.tieoffDebug(dut.debug)
-    dut.l2_frontend_bus_axi4.foreach(_.tieoff)
+    ldut.l2_frontend_bus_axi4.foreach(_.tieoff)
     dut.connectSimUART()
 }
 

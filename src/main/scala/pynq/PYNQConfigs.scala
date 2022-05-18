@@ -77,7 +77,7 @@ class BaseConfig extends Config(
   new WithDebugSBA() ++
   new BaseSubsystemConfig().alter((site, here, up) => {
     case PeripheryBusKey => up(PeripheryBusKey, site).copy(
-      frequency = BigInt(50000000)) // 50 MHz
+      dtsFrequency = Some(BigInt(50000000))) // 50 MHz
   })
 )
 
