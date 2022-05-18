@@ -33,6 +33,10 @@ lazy val fpgaShells = (project in file("fpga-shells")).
   dependsOn(rocketChip, sifiveBlocks).
   settings(commonSettings: _*)
 
+lazy val nutshell = (project in file("NutShell")).
+  dependsOn(rocketChip).
+  settings(commonSettings: _*)
+
 lazy val freedomPlatforms = (project in file(".")).
-  dependsOn(rocketChip, sifiveBlocks, nvdlaBlocks, fpgaShells).
+  dependsOn(rocketChip, sifiveBlocks, nvdlaBlocks, fpgaShells, nutshell).
   settings(commonSettings: _*)
